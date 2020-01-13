@@ -1,4 +1,10 @@
 
+
+#include <vtkAutoInit.h>
+VTK_MODULE_INIT(vtkRenderingOpenGL2)
+VTK_MODULE_INIT(vtkRenderingFreeType)
+VTK_MODULE_INIT(vtkInteractionStyle)
+
 #include <iostream>
 #include "examples/KDTreeVectorOfVectorsAdaptor.h"
 #include <boost\filesystem.hpp>
@@ -6,6 +12,20 @@
 #include <vector>
 #include <iterator>
 #include <map>
+#include <vtkPolyData.h>
+#include <vtkSmartPointer.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkActor.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderer.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkAxesActor.h>
+#include <vtkProperty.h>
+#include <vtkOBJReader.h>
+#include <vtkTransform.h>
+#include<vtkTransformFilter.h>
+#include <vtkOpenGLCamera.h>
 #include "include\nanoflann.hpp"
 #include <boost\program_options.hpp>
 typedef std::vector<std::vector<double> > my_vector_of_vectors_t;
@@ -13,6 +33,104 @@ using namespace std;
 using namespace boost::filesystem;
 using namespace boost::program_options;
 using namespace nanoflann;
+
+void show_ply(vector<string> path_to_obj)
+
+	{
+		
+
+		vtkSmartPointer<vtkRenderer> renderer =
+			vtkSmartPointer<vtkRenderer>::New();
+		vtkSmartPointer<vtkRenderWindow> renderWindow =
+			vtkSmartPointer<vtkRenderWindow>::New();
+		renderWindow->AddRenderer(renderer);
+		vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
+			vtkSmartPointer<vtkRenderWindowInteractor>::New();
+		renderWindowInteractor->SetRenderWindow(renderWindow);
+		vtkNew<vtkOpenGLCamera> cam;
+		renderer->SetActiveCamera(cam);
+		renderer->SetBackground(.2, .3, .4);
+		
+
+		for (int i = 0; i < path_to_obj.size(); i++)
+		{
+			path Pathobj(path_to_obj[i]);
+
+			if (Pathobj.extension() != ".obj") {
+				cout << "Cant read obj " << Pathobj.string() << endl;
+				continue;
+			}
+			else
+			{
+				cout << i << endl;
+				const char* pathToObjChar = path_to_obj[i].c_str();
+				vtkSmartPointer<vtkOBJReader> reader =
+					vtkSmartPointer<vtkOBJReader>::New();
+				reader->SetFileName(pathToObjChar);
+				reader->Update();
+				reader->GetOutput();
+
+				vtkSmartPointer<vtkTransform> transform =
+					vtkSmartPointer<vtkTransform>::New();
+				transform->Scale(.005, .005, .005);
+
+				vtkSmartPointer<vtkTransformFilter> transformFilter =
+					vtkSmartPointer<vtkTransformFilter>::New();
+				transformFilter->SetInputConnection(reader->GetOutputPort());
+				transformFilter->SetTransform(transform);
+
+				// Visualizar
+				vtkSmartPointer<vtkPolyDataMapper> mapper =
+					vtkSmartPointer<vtkPolyDataMapper>::New();
+				mapper->SetInputConnection(reader->GetOutputPort());
+
+				vtkSmartPointer<vtkActor> actor =
+					vtkSmartPointer<vtkActor>::New();
+				actor->SetPosition(1.1+i, .5, .1);
+				actor->SetMapper(mapper);
+				vtkSmartPointer<vtkAxesActor> axes =
+					vtkSmartPointer<vtkAxesActor>::New();
+				renderer->AddActor(actor);
+				renderer->SetBackground(0, 0, 0);
+				renderer->UseShadowsOff();
+				if (i == 1) {
+					renderer->AddActor(axes);
+				}
+
+
+			}
+		}
+			renderWindow->Render();
+			renderWindowInteractor->Start();
+			vtkSmartPointer<vtkInteractorStyleTrackballCamera> style =
+				vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New(); //like paraview
+
+			renderWindowInteractor->SetInteractorStyle(style);
+
+			renderWindowInteractor->Start();
+		
+
+}
+
+string ChangeToObj(const string& pathToFileInv) {
+
+	auto pos = pathToFileInv.find_first_of(".");
+	string invFName;
+	if (pos != string::npos && pos != 0)
+	{
+		invFName = pathToFileInv.substr(0, pos);
+	}
+	else
+	{
+		cerr << "No extension in input filename? : " << pathToFileInv << endl;
+	}
+	invFName += ".obj";
+
+	
+	return invFName;
+	
+}
+
 auto parse_cli_args(int argc, char** argv)
 {
 	options_description desc{ "Program options of number closest vectors." };
@@ -110,10 +228,10 @@ vector<path> AllFilesInDirectory(path& DirectName) {
 
 	
 	vector<path> v;
-	for (auto&& x : directory_iterator(DirectName)) {
-		auto k = x.path();
-		string z = k.string();
-		if (z[z.size() - 1] != 'v') {
+	for (auto&& x : recursive_directory_iterator(DirectName)) {
+	
+		
+		if (x.path().extension()!= ".inv") {
 			continue;
 		}
 		else {
@@ -190,8 +308,8 @@ int main(int argc, char** argv)
 			std::cerr << "Cannot find file to read in this directory " << argv[1] << std::endl;
 		}
 	*/
-	path path(args["inputf"].as<string>() /**/);
-	std::ifstream ifs(path.string());
+	path pat(args["inputf"].as<string>() /**/);
+	std::ifstream ifs(pat.string());
 	vector<double> NumbersIscom;
 	NumbersIscom = FileToVector(ifs);
 	if (NumbersIscom.size() == 0)
@@ -236,7 +354,7 @@ int main(int argc, char** argv)
 
 
 
-	std::ofstream file("Answer.txt");
+	std::ofstream file(args["inputd"].as<string>()+"\\Answer.txt");
 	file << "For " << endl;
 	file << args["inputf"].as<string>()/**/ << endl;
 	file << "Ten closest vector is" << endl;
@@ -246,6 +364,29 @@ int main(int argc, char** argv)
 	}
 	file.close();
 	
+	/*auto pos = args["inputf"].as<string>().find_first_of(".");
+	string invFName;
+	if (pos != string::npos && pos != 0)
+	{
+		invFName = args["inputf"].as<string>().substr(0, pos);
+	}
+	else
+	{
+		cerr << "No extension in input filename? : " << args["inputf"].as<string>() << endl;
+	}
+	invFName += ".obj";
 	
+	path pathfile(invFName);
+	const char* ch = new char[invFName.length()];
+	ch= invFName.c_str();
+
+	show_ply(ch);*/
+	vector <string> PathToObj;
+	PathToObj.push_back(ChangeToObj(args["inputf"].as<string>()));
+	for (size_t i = 0; i < num_results; i++) {
+		PathToObj.push_back(ChangeToObj(PathToVector[ret_indexes[i]]));
+	}
+
+	show_ply(PathToObj);
 	return 0;
 }
