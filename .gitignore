@@ -384,3 +384,5 @@ MigrationBackup/
 *.exe
 *.out
 *.app
+
+build/
