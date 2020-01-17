@@ -20,8 +20,8 @@
 		renderer->UseShadowsOff();
 		renderer->AddActor(axes);
 		
-		double *width ,x=0, d=0;
-		width = &d;
+		double *width_x=0, *wid=0 ,x=0, d=0, *width_first_y=0, *width_y=0, *width_first_z=0, * width_z=0 ;
+		
 		int odin = 1;
 		for (int i = 0; i < path_to_obj.size(); i++)
 		{
@@ -40,21 +40,27 @@
 
 				vtkSmartPointer<vtkActor> actor =
 					vtkSmartPointer<vtkActor>::New();
-		
-				actor->SetPosition(x, .0, .0);
+				
 				actor->SetMapper(mapper);
 				if (i == 0)
 				{
 					actor->GetProperty()->SetColor(0.0, 1.0, 0.0); //(R,G,B)
+					width_first_y = actor->GetYRange();
+					width_first_z = actor->GetZRange();
+					actor->SetPosition(.0, .0, .0);
 				}
 				else {
-					actor->GetProperty()->SetColor(1.0, 0.0, 0.0); //(R,G,B)
+				actor->GetProperty()->SetColor(1.0, 0.0, 0.0); 
+				width_y = actor->GetYRange();
+				width_z = actor->GetZRange();
+				*width_y = *width_first_y - *width_y;
+				*width_z = *width_first_z - *width_z;
+				actor->SetPosition(x, *width_y, *width_z);//(R,G,B)
 				}
-				width= actor->GetXRange();
-				x = x + *width / 2 + odin;
-					renderer->AddActor(actor);
-				
-
+				width_x= actor->GetXRange();
+				d= x - *width_x;
+				x = x + d +odin;
+				renderer->AddActor(actor);
 		}
 		renderWindow->Render();
 		renderWindowInteractor->Start();
