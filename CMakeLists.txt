@@ -10,7 +10,7 @@ set(_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 file(GLOB_RECURSE _headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${_include_dir}/*.h*)
 
-add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/stdafx.cpp ${_headers} ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk_viz.cpp)
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/stdafx.cpp ${_headers} ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk_viz.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/make_tree.cpp)
 
 set(_precompiled_header "stdafx.h")
 

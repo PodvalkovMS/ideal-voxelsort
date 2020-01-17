@@ -20,6 +20,9 @@ VTK_MODULE_INIT(vtkInteractionStyle)
 #include <vtkOBJReader.h>
 #include <vtkTransform.h>
 #include<vtkTransformFilter.h>
+#include <vtkProp3D.h>
 #include <vtkOpenGLCamera.h>
 
-void show_ply(std::vector<std::string> path_to_obj);
+namespace vtk_viz {
+	void show_ply(const std::vector<boost::filesystem::path>& path_to_obj);
+}

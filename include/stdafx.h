@@ -13,7 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
-#include <map>
+#include <memory>
 
 #include <boost\filesystem.hpp>
 #include <boost\program_options.hpp>
